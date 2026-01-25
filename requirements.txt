@@ -1,1 +1,15 @@
 streamlit
+fastapi
+uvicorn
+apscheduler
+requests
+beautifulsoup4
+psycopg2-binary
+fastapi
+uvicorn
+apscheduler
+sqlalchemy
+pydantic
+requests
+beautifulsoup4
+plotly
