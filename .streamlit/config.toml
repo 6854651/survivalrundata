@@ -1,0 +1,6 @@
+[theme]
+primaryColor = "#6755ea"      # Blue buttons
+secondaryColor = "#174f14bb"    # Green accents  
+backgroundColor = "#F8F9FA"   # Light gray bg
+textColor = "#2F3542"         # Dark text
+font = "sans serif"
