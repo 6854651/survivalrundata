@@ -336,7 +336,7 @@ else:
         ]
 
         st.dataframe(
-            df[table_cols].sort_values(['datum', 'run_type', 'run_id']),
+            df[table_cols].sort_values(['datum', 'run_type']),
             width="stretch"
         )
 
@@ -353,7 +353,7 @@ else:
         run_types = df['run_type'].dropna().unique()
         selected_run_type = st.selectbox("Select Run Type", run_types)
 
-        df_filtered = df[df['run_type'] == selected_run_type].sort_values(['datum', 'run_id'])
+        df_filtered = df[df['run_type'] == selected_run_type].sort_values(['datum'])
 
         fig2 = px.line(
             df_filtered,
