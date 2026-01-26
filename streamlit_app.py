@@ -144,7 +144,7 @@ if "selected_athletes" not in st.session_state:
 # UI
 # ============================
 
-st.title("Athlete Performance Dashboard")
+st.title("Survivalrundata Dashboard")
 
 available_years = get_available_years()
 if not available_years:
