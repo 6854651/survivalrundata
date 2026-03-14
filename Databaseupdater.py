@@ -7,7 +7,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # -------------------- CONFIG --------------------
 
-START_JAAR = 2024
+START_JAAR = 2025
 EIND_JAAR = 2025
 
 BASE_URL = "https://www.uvponline.nl/uvponlineU/index.php/uvproot/wedstrijdschema"
