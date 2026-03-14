@@ -1,42 +1,58 @@
-import streamlit as st
-import subprocess
-import os
 import sys
+import os
+import subprocess
+import streamlit as st
 import datetime
 import pandas as pd
 import sqlite3
 import plotly.express as px
 
-DB_FILE = "survivalrun.db"  # file with all information necessary for the app to run
-UPDATE_SCRIPT = "Databaseupdater.py"  # your script that generates/updates the DB
+DB_FILE = "survivalrun.db"
+UPDATE_SCRIPT = "Databaseupdater.py"
 
-def needs_update(db_file):
-    import datetime
-    if not os.path.exists(db_file):
-        return True
-    last_modified = datetime.datetime.fromtimestamp(os.path.getmtime(db_file))
+# ---------------------------
+# Database update helpers
+# ---------------------------
+
+def last_sunday_21():
     now = datetime.datetime.now()
     days_since_sunday = (now.weekday() + 1) % 7
     last_sunday = now - datetime.timedelta(days=days_since_sunday)
-    last_sunday = last_sunday.replace(hour=21, minute=0, second=0, microsecond=0)
-    return last_modified < last_sunday
+    return last_sunday.replace(hour=21, minute=0, second=0, microsecond=0)
+
+def needs_update(db_file):
+    if not os.path.exists(db_file):
+        return True
+    last_modified = datetime.datetime.fromtimestamp(os.path.getmtime(db_file))
+    return last_modified < last_sunday_21()
 
 def update_db():
+    """Run the updater synchronously and show a spinner."""
     python_exe = sys.executable
-    update_script = os.path.join(os.path.dirname(__file__), UPDATE_SCRIPT)
+    script_path = os.path.join(os.path.dirname(__file__), UPDATE_SCRIPT)
     try:
-        with st.spinner("Updating database… This may take a while…"):
-            subprocess.run([python_exe, update_script], check=True)
+        with st.spinner("Updating database… this may take a few minutes…"):
+            subprocess.run([python_exe, script_path], check=True)
     except subprocess.CalledProcessError as e:
         st.error(f"Database update failed: {e}")
     except Exception as e:
         st.error(f"Unexpected error: {e}")
 
-# ============================
+# ---------------------------
 # Run update if needed
-# ============================
+# ---------------------------
+
 if needs_update(DB_FILE):
+    st.info("Database is out-of-date. Running updater…")
     update_db()
+
+# ---------------------------
+# Show last update
+# ---------------------------
+
+if os.path.exists(DB_FILE):
+    last_update = datetime.datetime.fromtimestamp(os.path.getmtime(DB_FILE))
+    st.caption(f"Database last updated: {last_update.strftime('%Y-%m-%d %H:%M:%S')}")
 
 # ============================
 # Database helpers
