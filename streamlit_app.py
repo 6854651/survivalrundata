@@ -26,12 +26,11 @@ def needs_update(db_file):
     return last_modified < last_sunday_21()
 
 def update_db():
-    temp_db = "temp.db"
+    """Run the database updater synchronously with a spinner."""
     try:
         with st.spinner("Updating database… This may take a few moments."):
+            # Run the updater script synchronously
             subprocess.run(["python", UPDATE_SCRIPT], check=True)
-            if os.path.exists(temp_db):
-                os.replace(temp_db, DB_FILE)
     except subprocess.CalledProcessError as e:
         st.error(f"Database update failed: {e}")
     except Exception as e:
