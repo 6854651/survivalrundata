@@ -14,4 +14,4 @@ requests
 beautifulsoup4
 plotly
 pandas
-sqlalchemy
+
