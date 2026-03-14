@@ -1,18 +1,58 @@
 import streamlit as st
-import streamlit as st
+import threading
+import subprocess
+import os
+import time
+import datetime
 import pandas as pd
 import sqlite3
 import plotly.express as px
 
 DB_FILE = "survivalrun.db" #file with all information necessary for the app to run
+UPDATE_SCRIPT = "Databaseupdater.py"  # your script that generates/updates the DB
+
+# ============================
+# Database update helpers
+# ============================
+
+def last_sunday_21():
+    """Return datetime of the most recent Sunday at 21:00"""
+    now = datetime.datetime.now()
+    days_since_sunday = (now.weekday() + 1) % 7  # Monday=0, Sunday=6
+    last_sunday = now - datetime.timedelta(days=days_since_sunday)
+    return last_sunday.replace(hour=21, minute=0, second=0, microsecond=0)
+
+def needs_update(db_file):
+    """Return True if DB is missing or older than last Sunday 21:00"""
+    if not os.path.exists(db_file):
+        return True
+    last_modified = datetime.datetime.fromtimestamp(os.path.getmtime(db_file))
+    return last_modified < last_sunday_21()
+
+def update_db():
+    """Run the weekly update script safely"""
+    temp_db = "temp.db"  # optional: your script could write directly to this temp file
+    try:
+        # Call the script
+        subprocess.run(["python", UPDATE_SCRIPT], check=True)
+        # atomic replace if temp_db exists
+        if os.path.exists(temp_db):
+            os.replace(temp_db, DB_FILE)
+    except Exception as e:
+        st.error(f"Failed to update database: {e}")
+
+# ============================
+# Launch update in background if needed
+# ============================
+
+if needs_update(DB_FILE):
+    threading.Thread(target=update_db, daemon=True).start()
 
 # ============================
 # Database helpers
 # ============================
-
 def get_connection():
     return sqlite3.connect(DB_FILE)
-
 
 def get_available_years():
     conn = get_connection()
@@ -25,7 +65,6 @@ def get_available_years():
     tables = pd.read_sql(query, conn)["name"].tolist()
     conn.close()
     return sorted(int(t.split("_")[-1]) for t in tables)
-
 
 def build_union_query(years, where_clause="", params=None):
     """Build UNION ALL over only existing tables."""
@@ -143,12 +182,11 @@ if "selected_athletes" not in st.session_state:
 # ============================
 # UI
 # ============================
-
 st.title("Survivalrundata Dashboard")
 
 available_years = get_available_years()
 if not available_years:
-    st.error("No tables named alle_uitslagen_YYYY found.")
+    st.warning("Database not yet available. It may be updating in the background.")
     st.stop()
 
 min_year, max_year = min(available_years), max(available_years)
