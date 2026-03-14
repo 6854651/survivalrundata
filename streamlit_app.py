@@ -1,6 +1,7 @@
 import streamlit as st
 import subprocess
 import os
+import sys
 import datetime
 import pandas as pd
 import sqlite3
@@ -9,32 +10,27 @@ import plotly.express as px
 DB_FILE = "survivalrun.db"  # file with all information necessary for the app to run
 UPDATE_SCRIPT = "Databaseupdater.py"  # your script that generates/updates the DB
 
-# ============================
-# Database update helpers
-# ============================
-
-def last_sunday_21():
-    now = datetime.datetime.now()
-    days_since_sunday = (now.weekday() + 1) % 7  # Monday=0, Sunday=6
-    last_sunday = now - datetime.timedelta(days=days_since_sunday)
-    return last_sunday.replace(hour=21, minute=0, second=0, microsecond=0)
-
 def needs_update(db_file):
+    import datetime
     if not os.path.exists(db_file):
         return True
     last_modified = datetime.datetime.fromtimestamp(os.path.getmtime(db_file))
-    return last_modified < last_sunday_21()
+    now = datetime.datetime.now()
+    days_since_sunday = (now.weekday() + 1) % 7
+    last_sunday = now - datetime.timedelta(days=days_since_sunday)
+    last_sunday = last_sunday.replace(hour=21, minute=0, second=0, microsecond=0)
+    return last_modified < last_sunday
 
 def update_db():
-    """Run the database updater synchronously with a spinner."""
+    python_exe = sys.executable
+    update_script = os.path.join(os.path.dirname(__file__), UPDATE_SCRIPT)
     try:
-        with st.spinner("Updating database… This may take a few moments."):
-            # Run the updater script synchronously
-            subprocess.run(["python", UPDATE_SCRIPT], check=True)
+        with st.spinner("Updating database… This may take a while…"):
+            subprocess.run([python_exe, update_script], check=True)
     except subprocess.CalledProcessError as e:
         st.error(f"Database update failed: {e}")
     except Exception as e:
-        st.error(f"Unexpected error during update: {e}")
+        st.error(f"Unexpected error: {e}")
 
 # ============================
 # Run update if needed
